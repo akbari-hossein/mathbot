@@ -35,6 +35,11 @@ contract ContestPrize is Ownable {
         Components[_ID] = comp(_ID, 0, _Price, true , true);
         emit ContestCreated(_ID , _Price);
     }
+    // This function is used to define a free contest 
+    function Addfreecomp(uint _ID) external onlyOwner CheckSameId(_ID) {
+        Components[_ID] = comp(_ID, 0,0, true , true);
+        emit ContestCreated(_ID , 0);
+    }
 
     //This function is for determining the total budget of a competition and get ID and The number of contestants
     function Deposit(uint _ID , uint _cnt) external payable CheckActive(_ID) onlyOwner() {
