@@ -5,15 +5,31 @@ This document outlines the structure and conventions we follow in our frontend c
 ## 📁 Folder Structure
 
 ```
-src/
-├── components/ # Reusable UI components
-├── pages/ # Page-level components
-├── hooks/ # Custom React hooks
-├── services/ # API calls and data fetching
-├── utils/ # Utility functions
-├── types/ # TypeScript types/interfaces
-├── assets/ # Static files (images, icons)
-└── theme/ # Theme settings (if applicable)
+my-app/
+├── public/
+│   └── index.html
+├── src/
+│   ├── assets/          # Images, fonts, etc.
+│   ├── components/      # Reusable UI components (buttons, cards, etc.)
+│   ├── features/        # Feature-based folders (domain logic)
+│   │   ├── auth/
+│   │   │   ├── components/
+│   │   │   ├── hooks/
+│   │   │   └── AuthSlice.ts
+│   │   └── dashboard/
+│   ├── hooks/           # Shared hooks
+│   ├── layouts/         # Layout components (SidebarLayout, AuthLayout)
+│   ├── pages/           # Page-level components (routed via React Router)
+│   ├── services/        # API calls or service layer (e.g., axios config)
+│   ├── store/           # Redux or Zustand store
+│   ├── styles/          # Global styles or theme settings
+│   ├── utils/           # Utility functions, helpers
+│   ├── types/           # TypeScript types/interfaces
+│   ├── App.tsx
+│   └── main.tsx         # Entry point (ReactDOM.render)
+├── .env
+├── package.json
+└── tsconfig.json (if using TypeScript)
 ```
 
 
