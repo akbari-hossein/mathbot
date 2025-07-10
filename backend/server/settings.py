@@ -104,16 +104,26 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('MYSQL_DATABASE'),
-        'USER': config('MYSQL_USER'),
-        'PASSWORD': config('MYSQL_PASSWORD'),
-        'HOST': 'mysql',
-        'PORT': '3306',
+ENV = config("ENV", default="development")
+
+if ENV == "production":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config("MYSQL_NAME"),
+            'USER': config("MYSQL_USER"),
+            'PASSWORD': config("MYSQL_PASSWORD"),
+            'HOST': config("MYSQL_HOST", default="localhost"),
+            'PORT': config("MYSQL_PORT", default="3306"),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / config("SQLITE_NAME", default="db.sqlite3"),
+        }
+    }
 
 
 
