@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import axios from 'axios';
 import Loader from "../components/Loader.js";
 import PostPublicProfile from '../components/PostPublicProfile.js';
-
+import API_URL from '../utils/api.js';
 
 function Users() {
 
@@ -16,7 +16,7 @@ function Users() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        axios.get("https://server.mathbot.ir/api/accounts/" + username + "/").then((res) => {
+        axios.get(`${API_URL}/api/accounts/` + username + "/").then((res) => {
             setdata(res.data);
             setIsLoading(false)
         })

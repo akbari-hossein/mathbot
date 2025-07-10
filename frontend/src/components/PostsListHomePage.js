@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Loader from "./Loader.js";
 import Creator from './Creator.js';
+import API_URL from '../utils/api.js';
 
 function PostsListHomePage() {
 
@@ -12,7 +13,7 @@ function PostsListHomePage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch('https://server.mathbot.ir/api/posts/?page=' + 1);
+                const response = await fetch(`${API_URL}/api/posts/?page=` + 1);
                 const json = await response.json();
                 setIsLoading(false);
                 setListing(json.results);

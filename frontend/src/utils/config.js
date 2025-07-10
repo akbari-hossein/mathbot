@@ -1,9 +1,10 @@
 import axios from 'axios';
+import API_URL from './api';
 
 function config() {
     
     var postobject = axios.create({
-        baseURL: "https://server.mathbot.ir/api"
+        baseURL: `${API_URL}/api`
     })
     
     postobject.interceptors.request.use(
@@ -26,7 +27,7 @@ function config() {
       
             try {
               const refreshToken = localStorage.getItem('refreshToken');
-              const response = await axios.post('https://server.mathbot.ir/api/token/refresh/', {refresh: refreshToken} );
+              const response = await axios.post(`${API_URL}/api/token/refresh/`, {refresh: refreshToken} );
               const { access } = response.data;
               
               localStorage.setItem('token', access);

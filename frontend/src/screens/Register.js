@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Helmet } from 'react-helmet';
 import Header from "../components/Header.js";
 import { Link } from "react-router-dom";
+import API_URL from '../utils/api.js';
 
 function Register() {
 
@@ -22,7 +23,7 @@ function Register() {
       const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-          const response = await axios.post("https://server.mathbot.ir/api/accounts/register/", formData);
+          const response = await axios.post(`${API_URL}/api/accounts/register/`, formData);
           console.log("Post created:", response.data);
           alert("اکانت با موفقیت ساخته شد");
           window.location.replace("/login");

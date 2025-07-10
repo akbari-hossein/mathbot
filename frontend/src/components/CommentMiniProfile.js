@@ -3,6 +3,7 @@ import axios from 'axios';
 import Loader from "./Loader.js";
 import config from '../utils/config.js';
 import { Link } from "react-router-dom";
+import API_URL from '../utils/api.js';
 
 
 function CommentMiniProfile(props) {
@@ -23,7 +24,7 @@ function CommentMiniProfile(props) {
 
         const TokenConfig = config();
 
-        TokenConfig.delete("https://server.mathbot.ir/api/comments/" + CommentId + "/delete/").then(response => {
+        TokenConfig.delete(`${API_URL}/api/comments/` + CommentId + "/delete/").then(response => {
             console.log('Resource deleted successfully:', response.data);
             alert("کامنت با موفقیت پاک شد");
             window.location.reload();

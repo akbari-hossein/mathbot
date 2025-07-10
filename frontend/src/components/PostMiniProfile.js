@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link } from "react-router-dom";
 import Loader from "./Loader.js";
 import config from '../utils/config.js';
+import API_URL from '../utils/api.js';
 
 
 function PostMiniProfile(props) {
@@ -23,7 +24,7 @@ function PostMiniProfile(props) {
 
         const TokenConfig = config();
 
-        TokenConfig.delete("https://server.mathbot.ir/api/posts/" + postId + "/delete/").then(response => {
+        TokenConfig.delete(`${API_URL}/api/posts/` + postId + "/delete/").then(response => {
             console.log('Resource deleted successfully:', response.data);
             alert("پست با موفقیت پاک شد");
             window.location.reload();

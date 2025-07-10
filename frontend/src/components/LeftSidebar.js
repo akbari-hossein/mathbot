@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import IsAuthenticated from "../utils/IsAuthenticated.js";
 import axios from 'axios';
+import API_URL from '../utils/api.js';
 
 function LeftSidebar() {
 
@@ -10,7 +11,7 @@ function LeftSidebar() {
 
     useEffect(() => {
         if (IsAuthenticated() !== "Not Authenticated") {
-            axios.get("https://server.mathbot.ir/api/accounts/" + IsAuthenticated()).then((res) => {
+            axios.get(`${API_URL}/api/accounts/` + IsAuthenticated()).then((res) => {
                 setdata(res.data)
             })
         }

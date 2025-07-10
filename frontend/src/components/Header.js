@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from 'axios';
 import IsAuthenticated from "../utils/IsAuthenticated.js";
 import logo from "../assets/images/MATHBOTrect.png"
+import API_URL from '../utils/api.js';
 
 function Header() {
 
@@ -10,7 +11,7 @@ function Header() {
 
     useEffect(() => {
         if (IsAuthenticated() !== "Not Authenticated") {
-            axios.get("https://server.mathbot.ir/api/accounts/" + IsAuthenticated()).then((res) => {
+            axios.get(`${API_URL}/api/accounts/` + IsAuthenticated()).then((res) => {
                 setdata(res.data)
             })
         }

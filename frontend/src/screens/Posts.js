@@ -9,6 +9,7 @@ import UploadComment from '../components/UploadComment.js';
 import Loader from "../components/Loader.js";
 import LeftSidebar from "../components/LeftSidebar.js";
 import Creator from '../components/Creator.js';
+import API_URL from '../utils/api.js';
 
 function Posts() {
 
@@ -18,7 +19,7 @@ function Posts() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-            axios.get("https://server.mathbot.ir/api/posts/" + id + "/").then((res) => {
+            axios.get(`${API_URL}/api/posts/` + id + "/").then((res) => {
                 setdata(res.data);
                 setIsLoading(false)
             })

@@ -9,6 +9,7 @@ import axios from 'axios';
 import Loader from "../components/Loader.js";
 import IsAuthenticated from "../utils/IsAuthenticated.js";
 import config from '../utils/config.js';
+import API_URL from '../utils/api.js';
 
 function Account() {
 
@@ -31,7 +32,7 @@ function Account() {
 
     useEffect(() => {
         if (IsAuthenticated() !== "Not Authenticated") {
-            axios.get("https://server.mathbot.ir/api/accounts/" + IsAuthenticated()).then((res) => {
+            axios.get(`${API_URL}/api/accounts/` + IsAuthenticated()).then((res) => {
                 setdata(res.data)
                 setImage(res.data.avatar)
                 setIsLoading(false)

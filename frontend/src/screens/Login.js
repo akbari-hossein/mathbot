@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Helmet } from 'react-helmet';
 import Header from "../components/Header.js";
 import { Link } from "react-router-dom";
+import API_URL from '../utils/api.js';
 
 function Login() {
     
@@ -22,7 +23,7 @@ function Login() {
         e.preventDefault();
     
         try {
-          const response = await axios.post('https://server.mathbot.ir/api/token/', credentials);
+          const response = await axios.post(`${API_URL}/api/token/`, credentials);
           const { access, refresh } = response.data;
     
           // Store the tokens in localStorage or secure cookie for later use
