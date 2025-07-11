@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Contest, Team, Participation
+from .models import Contest, Participation
 from django.utils import timezone
 
 
