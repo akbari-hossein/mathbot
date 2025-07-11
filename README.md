@@ -4,24 +4,7 @@
 
 # mathbot
 
-post & Answer Forum
-
-Note: The program is compatible with Node.js version 16. It is not compatible with higher versions.
-
-Downgrading Node.js:
-- For macOS and Linux:
-```
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-```
-- For Windows:
-Download the Windows installer from the nvm GitHub repository.
-Run the installer and follow the on-screen instructions.
-
-```
-source ~/.nvm/nvm.sh
-nvm install 16
-nvm use 16
-```
+MathBot is an innovative, full-stack programming competition platform built to serve both traditional ICPC-style contests and modern online challenges. By leveraging DOMjudge for automated judging, Django for backend management, ReactJS for the frontend, and Solidity-based smart contracts for secure, decentralized payments, MathBot creates a reliable and futuristic environment for coders to compete.
 
 ## API endpoint
 
@@ -41,63 +24,54 @@ List of available API (browseable) at /api
 * /token/refresh/
 ```
 
-## Installation
+## Installation with Docker
 
-Make sure you have following software installed in your system:
-
-- Python 3
-- Node.js
-- NPM
-- Git
-
-First, we need to clone the repository
+1. Clone the Repository
 
 ```
-git clone https://github.com/hosseincodes/mathbot.git
+git clone https://github.com/akbari-hossein/mathbot
+cd mathbot
 ```
 
-Install all required dependencies in an isolated environment
+2. Set Up Environment Variables
+
+Before running the containers, you need to create .env files for both the backend and frontend.
+
+- Navigate to the backend/ folder:
 
 ```
-cd mathbot/server
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+cd backend
+cp .env.example .env
 ```
 
-Install all required dependencies for frontend in mathbot/ folder by typing
+- Navigate to the frontend/ folder:
 
 ```
-cd ..
-npm i
+cd ../frontend
+cp .env.example .env
 ```
 
-## Running Backend on Local Server
+Make sure to update the .env files with the correct values if needed.
 
-Activate virtual environment
-
-```
-cd server
-source venv/bin/activate
-```
-
-replace all https://server.mathbot.ir with http://localhost:8000
-
-Then run the server, api endpoint should be available on http://localhost:8000/api
+3. Build and Start the Project
+   
+From the project root directory, run:
 
 ```
-python manage.py runserver
+docker-compose up --build
 ```
 
-## Running Frontend on Local Server
+4. Access the Application
 
-Start development server
+After the containers are up and running:
 
-```
-npm start
-```
+Frontend: http://localhost:3000
 
-Frontend should be available on http://localhost:3000/
+Backend API: http://localhost:8000
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) file for more info
 
 ## Social Networks
 
