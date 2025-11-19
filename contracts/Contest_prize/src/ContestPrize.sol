@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
-import "openzeppelin-contracts/contracts/utils/Pausable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+
 
 contract ContestPrize is Ownable, ReentrancyGuard, Pausable {
     constructor() Ownable(msg.sender) {}
@@ -84,15 +85,15 @@ contract ContestPrize is Ownable, ReentrancyGuard, Pausable {
         if (_first == address(0) || _second == address(0) || _Third == address(0)) {
             revert wrongaddress(_first, _second, _Third);
         }
-        uint256 award = Components[_ID].Total_amount;
+        uint256 award = Components[_ID].Total_amount; 
         Components[_ID].status = false;
         _safetransfer(_first, (award * 30) / 100);
+        Components[_ID].Total_amount -= (30 * award) / 100 ;
         _safetransfer(_second, (award * 20) / 100);
+        Components[_ID].Total_amount -= (20 * award) / 100 ;
         _safetransfer(_Third, (award * 10) / 100);
+        Components[_ID].Total_amount -= (10 * award) / 100 ;
         emit WinnersAwarded(_ID, _first, _second, _Third);
-        unchecked {
-            Components[_ID].Total_amount -= (award * 60) / 100;
-        }
     }
 
     // just for get ether
@@ -116,11 +117,11 @@ contract ContestPrize is Ownable, ReentrancyGuard, Pausable {
         Components[_ID].status = false;
         uint256 award = Components[_ID].Total_amount;
         _safetransfer(_first, (award * percent1) / 100);
+        Components[_ID].Total_amount -= (percent1 * award) / 100 ;
         _safetransfer(_second, (award * percent2) / 100);
+        Components[_ID].Total_amount -= (percent2 * award) / 100 ;
         _safetransfer(_Third, (award * percent3) / 100);
-        unchecked {
-            Components[_ID].Total_amount -= (award * sum) / 100;
-        }
+        Components[_ID].Total_amount -= (percent3 * award) / 100 ;
     }
 
     // function for freecomp and 3 person winner get: It takes the addresses of the
@@ -139,8 +140,11 @@ contract ContestPrize is Ownable, ReentrancyGuard, Pausable {
         }
         Components[ID].status = false;
         _safetransfer(_first, value_first);
+        Components[ID].Total_amount -= value_first;
         _safetransfer(_second, value_second);
+        Components[ID].Total_amount -= value_second;
         _safetransfer(_Third, value_Third);
+        Components[ID].Total_amount -= value_Third;
     }
 
     // this function Get the winner's address and ID for the duel competition and give her the prize for the duel competition.
@@ -166,6 +170,7 @@ contract ContestPrize is Ownable, ReentrancyGuard, Pausable {
 
     // Prize distribution for competitions with arbitrary prizes Each person
     // takes a presentation of the winners and a presentation of the prizes and distributes the prizes.
+    // prize = amount ether
     function Awardforarbitrary_comp(
         address payable[] calldata winners,
         uint256[] calldata prize,
