@@ -40,3 +40,4 @@ backend/uploads/userprofiles
 backend/uploads/postimages
 backend/API/private.env
 backend/contractapi/api/private.env
+contract/Contest_prize/.env

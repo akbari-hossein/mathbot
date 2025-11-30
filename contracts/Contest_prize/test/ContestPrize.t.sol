@@ -53,6 +53,7 @@ contract ContestPrizeTest is Test {
          assertEq(_testaddress1.balance , 30 ether);
          assertEq(_testaddress2.balance , 20 ether);
          assertEq(_testaddress3.balance , 10 ether);
+         assertEq(_contestPrize.getcomptotal(1) , 40 ether);
          
    }
 
@@ -70,6 +71,8 @@ contract ContestPrizeTest is Test {
       assertEq(_testaddress1.balance , 50 ether);
       assertEq(_testaddress2.balance , 30 ether);
       assertEq(_testaddress3.balance , 5 ether);
+      assertEq(_contestPrize.getcomptotal(1) , 15 ether);
+
    }
 
     function testawardforfreecomp() public {
@@ -86,6 +89,8 @@ contract ContestPrizeTest is Test {
       assertEq(_testaddress1.balance , 50 ether);
       assertEq(_testaddress2.balance , 30 ether);
       assertEq(_testaddress3.balance , 5 ether);
+      assertEq(_contestPrize.getcomptotal(1) , 15 ether);
+
    }
 
     function testawardforarbitrary() public {
@@ -110,9 +115,11 @@ contract ContestPrizeTest is Test {
       assertEq(_testaddress1.balance , 50 ether);
       assertEq(_testaddress2.balance , 30 ether);
       assertEq(_testaddress3.balance , 5 ether);
+      assertEq(_contestPrize.getcomptotal(1) , 15 ether);
+
    }
 
-   function awardforduel() public {
+   function testawardforduel() public {
          address _testaddress1 = 0x0000000000000000000000000000000000001234 ;
          vm.deal(_testaddress1, 0);
          _contestPrize.Addcomp(1, 0 , 100 ether);
@@ -120,6 +127,7 @@ contract ContestPrizeTest is Test {
          _contestPrize.addbudgeforfreecomp{value : 100 ether}(1);
          _contestPrize.Awardforduel_comp(payable(_testaddress1), 1);
          assertEq(_testaddress1.balance , 90 ether);
+         assertEq(_contestPrize.getcomptotal(1) , 10 ether);
    }
 
    function testwithdrawowner() public {
@@ -132,6 +140,31 @@ contract ContestPrizeTest is Test {
       assertEq(_testaddress1.balance, 90 ether);
       _contestPrize.withdrawOwner(payable(_testaddress1) , 1);
       assertEq(_testaddress1.balance, 100 ether);
+      assertEq(_contestPrize.getcomptotal(1) , 0 ether);
       
+   }
+
+   function testpause() public {
+      address _testaddress1 = 0x0000000000000000000000000000000000001234 ;
+      vm.deal(_testaddress1, 0);
+      _contestPrize.pause();
+      vm.expectRevert();
+      _contestPrize.Addcomp(1, 20, 0);
+      _contestPrize.unpause();
+      _contestPrize.Addcomp(2, 30, 0);
+   }
+   // test finish comp and  only owner can withdraw
+   function testfinishcomp() public {
+      address _testaddress1 = 0x0000000000000000000000000000000000001234 ;
+      vm.deal(_testaddress1, 0); 
+      vm.deal(address(this) , 20 ether);
+      _contestPrize.Addcomp(1, 0, 20 ether);
+      _contestPrize.addbudgeforfreecomp{value : 20 ether}(1);
+      vm.expectRevert(bytes("Components is not over"));
+      _contestPrize.withdrawOwner(payable(_testaddress1), 1);
+      vm.startPrank(_testaddress1);
+      vm.expectRevert();
+      _contestPrize.withdrawOwner(payable(_testaddress1), 1);
+      vm.stopPrank();
    }
 }
