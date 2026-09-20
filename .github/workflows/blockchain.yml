@@ -1,0 +1,138 @@
+name: blockchain
+
+# Smart contract + the code that connects the backend and the frontend to it.
+on:
+  push:
+    paths: ['contracts/**', 'backend/**', 'frontend/src/blockchain/**', 'frontend/package*.json', '.github/workflows/blockchain.yml']
+  pull_request:
+    paths: ['contracts/**', 'backend/**', 'frontend/src/blockchain/**', 'frontend/package*.json', '.github/workflows/blockchain.yml']
+  workflow_dispatch:
+
+jobs:
+  contract:
+    name: Foundry (ContestPrize.sol)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts/Contest_prize
+    env:
+      FOUNDRY_PROFILE: ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - run: forge --version
+      - run: forge fmt --check
+      - run: forge build --sizes
+      - run: forge test -vvv
+
+      - name: ABI files match the contract
+        run: |
+          bash script/export-abi.sh
+          git diff --exit-code -- ../../backend/contractapi/abi ../../frontend/src/blockchain/ContestPrize.abi.json \
+            || { echo '::error::ABI is out of date - run contracts/Contest_prize/script/export-abi.sh and commit the result'; exit 1; }
+
+  backend:
+    name: Django (contractapi)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Build the contract (the tests deploy it)
+        run: forge build
+        working-directory: contracts/Contest_prize
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install python dependencies
+        working-directory: backend
+        # mysqlclient needs system libraries and the tests run on sqlite
+        run: |
+          grep -v '^mysqlclient' requirements.txt > /tmp/requirements-ci.txt
+          pip install -r /tmp/requirements-ci.txt
+
+      - name: Start a local chain
+        run: |
+          anvil > /tmp/anvil.log 2>&1 &
+          for i in $(seq 1 30); do
+            cast chain-id --rpc-url http://127.0.0.1:8545 > /dev/null 2>&1 && break
+            sleep 1
+          done
+          cast chain-id --rpc-url http://127.0.0.1:8545
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DJANGO_SECRET_KEY: ci-secret-key
+          ENV: development
+          SQLITE_NAME: ci.sqlite3
+          BLOCKCHAIN_TEST_RPC_URL: http://127.0.0.1:8545
+        run: python manage.py test contractapi -v 2
+
+  frontend:
+    name: Frontend blockchain module
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - name: Start a local chain and deploy the contract
+        run: |
+          anvil > /tmp/anvil.log 2>&1 &
+          for i in $(seq 1 30); do
+            cast chain-id --rpc-url http://127.0.0.1:8545 > /dev/null 2>&1 && break
+            sleep 1
+          done
+          KEYS=$(grep -oE '0x[0-9a-f]{64}' /tmp/anvil.log)
+          OWNER_KEY=$(echo "$KEYS" | sed -n 1p)
+          USER_KEY=$(echo "$KEYS" | sed -n 5p)
+          cd contracts/Contest_prize
+          PRIVATE_KEY=$OWNER_KEY forge script script/ContestPrize.s.sol:Deploycontestprize \
+            --rpc-url http://127.0.0.1:8545 --broadcast --silent
+          ADDRESS=$(jq -r '.transactions[0].contractAddress' broadcast/ContestPrize.s.sol/31337/run-latest.json)
+          echo "REACT_APP_CONTEST_CONTRACT_ADDRESS=$ADDRESS" >> "$GITHUB_ENV"
+          echo "REACT_APP_TEST_OWNER_KEY=$OWNER_KEY" >> "$GITHUB_ENV"
+          echo "REACT_APP_TEST_USER_KEY=$USER_KEY" >> "$GITHUB_ENV"
+
+      - name: Run tests
+        working-directory: frontend
+        env:
+          CI: 'true'
+          REACT_APP_TEST_RPC_URL: http://127.0.0.1:8545
+          REACT_APP_CHAIN_ID: '31337'
+        run: npm test -- --watchAll=false --testPathPattern blockchain
+
+      - name: Production build
+        working-directory: frontend
+        env:
+          CI: 'false' # warnings in the existing code must not fail the build
+        run: npm run build

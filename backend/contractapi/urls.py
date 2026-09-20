@@ -1,17 +1,40 @@
-from .views import *
-from django.urls import path, include
+from django.urls import path
 
+from . import views
+
+# mounted at /api/contract/
 urlpatterns = [
-    path('create-comp/', CreateCompView.as_view(), name ='create_comp'),
-    path('create-comp-free/', CreateCompFreeView.as_view(), name ='create_comp_free'),
-    path('award-winners/', AwardWinnersView.as_view(), name ='award_winners'),
-    path('award-with-percentage/', AwardWithPercentageView.as_view(), name ='award_with_percentage'),
-    path('withdraw-winners/', WithdrawWinnersView.as_view(), name ='withdraw_winners'),
-    path('comp-total/', CompTotalView.as_view(), name ='comp_total'),
-    path('comp-status/', CompStatusView.as_view(), name ='comp_status'),
-    path('comp-exist/', CompExistView.as_view(), name ='comp_exist'),
-    path('create-tx-metamask/', CreateTxView.as_view(), name = 'create_tx'),
-    path('award-for-duel-comp/' , Awardforduel_comp.as_view() , name = 'Duel Awards'),
-    path('Award-for-free-comp/' , Awardforfree_comp.as_view() , name = 'award_free_comp'),
-    path('Award-for-arbitrary-comp/' , Awardforarbitrary_comp.as_view() , name = 'Competitions_with_desired_prizes_and_desired_winners')
+    # public / logged in users
+    path('config/', views.ContractConfigView.as_view(), name='contract-config'),
+    path('contests/<int:contest_id>/', views.ContestOnChainView.as_view(), name='contract-contest'),
+    path(
+        'contests/<int:contest_id>/participants/<str:wallet>/',
+        views.ParticipantStatusView.as_view(),
+        name='contract-participant',
+    ),
+    # admin only
+    path('admin/contests/', views.CreateContestView.as_view(), name='contract-create-contest'),
+    path('admin/contests/<int:contest_id>/deadline/', views.SignupDeadlineView.as_view(), name='contract-deadline'),
+    path('admin/contests/<int:contest_id>/budget/', views.AddBudgetView.as_view(), name='contract-budget'),
+    path('admin/contests/<int:contest_id>/cancel/', views.CancelContestView.as_view(), name='contract-cancel'),
+    path('admin/contests/<int:contest_id>/refund/', views.RefundView.as_view(), name='contract-refund'),
+    path('admin/contests/<int:contest_id>/award/top3/', views.AwardTop3View.as_view(), name='contract-award-top3'),
+    path(
+        'admin/contests/<int:contest_id>/award/percentage/',
+        views.AwardPercentageView.as_view(),
+        name='contract-award-percentage',
+    ),
+    path('admin/contests/<int:contest_id>/award/fixed/', views.AwardFixedView.as_view(), name='contract-award-fixed'),
+    path('admin/contests/<int:contest_id>/award/duel/', views.AwardDuelView.as_view(), name='contract-award-duel'),
+    path('admin/contests/<int:contest_id>/award/custom/', views.AwardCustomView.as_view(), name='contract-award-custom'),
+    path('admin/contests/<int:contest_id>/withdraw/', views.WithdrawView.as_view(), name='contract-withdraw'),
+    path('admin/pause/', views.PauseView.as_view(), name='contract-pause'),
+    path('admin/unpause/', views.UnpauseView.as_view(), name='contract-unpause'),
+    path('admin/owner/', views.OwnerInfoView.as_view(), name='contract-owner'),
+    path('admin/transactions/', views.TransactionListView.as_view(), name='contract-transactions'),
+    path(
+        'admin/transactions/<str:tx_hash>/',
+        views.TransactionDetailView.as_view(),
+        name='contract-transaction-detail',
+    ),
 ]

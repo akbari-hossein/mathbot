@@ -1,184 +1,244 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from api.web3_config_payment import Createcomp, Createcompfree, Awardwinners, AwardWithPercentage , withdrawOwner , comptotal , compstatus , compexist , Awardforduel_comp , Awardforfree_comp , Awardforarbitrary_comp
-from api.web3_config_payment import create_Tx_metamask
-import json
-import os
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-class CreateCompView(APIView):
-    def post(self, request):
-        try:
-            ID = request.data.get('ID')
-            Price = request.data.get('Price')
-            if not ID or not Price:
-                return Response({"error": "ID and Price are required."}, status=status.HTTP_400_BAD_REQUEST)
+from . import services
+from .client import checksum
+from .errors import CONTRACT_ERROR_MESSAGES, BlockchainError
+from .models import ContractTransaction
+from .serializers import (
+    BudgetSerializer,
+    ContractTransactionSerializer,
+    CreateContestSerializer,
+    CustomAwardSerializer,
+    DeadlineSerializer,
+    DuelAwardSerializer,
+    FixedAwardSerializer,
+    PercentageAwardSerializer,
+    RefundSerializer,
+    Top3Serializer,
+    WithdrawSerializer,
+)
 
-            tx_hash = Createcomp(ID, Price)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-class CreateCompFreeView(APIView):
-    def post(self, request):
-        try:
-            ID = request.data.get('ID')
-            if not ID:
-                return Response({"error": "ID is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-            tx_hash = Createcompfree(ID)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class BlockchainAPIView(APIView):
+    """Returns blockchain errors as {"error": <code>, "detail": <Persian message>} with a proper status."""
 
-class AwardWinnersView(APIView):
-    def post(self, request):
-        try:
-            address_1 = request.data.get('address_1')
-            address_2 = request.data.get('address_2')
-            address_3 = request.data.get('address_3')
-            ID = request.data.get('ID')
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
 
-            if not address_1 or not address_2 or not address_3 or not ID:
-                return Response({"error": "All addresses and ID are required."}, status=status.HTTP_400_BAD_REQUEST)
+    def handle_exception(self, exc):
+        if isinstance(exc, BlockchainError):
+            return Response(exc.as_dict(), status=exc.http_status)
+        return super().handle_exception(exc)
 
-            tx_hash = Awardwinners(address_1, address_2, address_3, ID)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class AwardWithPercentageView(APIView):
-    def post(self, request):
-        try:
-            address_1 = request.data.get('address_1')
-            address_2 = request.data.get('address_2')
-            address_3 = request.data.get('address_3')
-            percent_1 = request.data.get('percent_1')
-            percent_2 = request.data.get('percent_2')
-            percent_3 = request.data.get('percent_3')
-            ID = request.data.get('ID')
+# ----------------------------------------------------------------------
+# public / user endpoints
+# ----------------------------------------------------------------------
 
-            if not address_1 or not address_2 or not address_3 or not percent_1 or not percent_2 or not percent_3 or not ID:
-                return Response({"error": "All addresses, percentages, and ID are required."}, status=status.HTTP_400_BAD_REQUEST)
+class ContractConfigView(BlockchainAPIView):
+    """Chain id + contract address for the frontend."""
 
-            tx_hash = AwardWithPercentage(address_1, address_2, address_3, percent_1, percent_2, percent_3, ID)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    permission_classes = [AllowAny]
 
-class Awardforduel_comp(APIView):
-    def post(self, request):
-        try:
-            address_1 = request.data.get('address_1')
-            ID = request.data.get('ID')
-
-            if not address_1 or not ID:
-                return Response({"error": "addresses,and ID are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-            tx_hash = Awardforduel_comp(address_1, ID)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class Awardforfree_comp(APIView):
-    def post(self, request):
-        try:
-            address_1 = request.data.get('address_1')
-            address_2 = request.data.get('address_2')
-            address_3 = request.data.get('address_3')
-            value_1 = request.data.get('value_1')
-            value_2 = request.data.get('value_2')
-            value_3 = request.data.get('value_3')
-            ID = request.data.get('ID')
-
-            if not address_1 or not address_2 or not address_3 or not value_1 or not value_2 or not value_3 or not ID:
-                return Response({"error": "All addresses, values, and ID are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-            tx_hash = Awardforfree_comp(address_1, address_2, address_3, value_1, value_2, value_3, ID)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class Awardforarbitrary_comp(APIView):
-    def post(self, request):
-        try:
-            winners = request.data.get('winners', [])
-            prizes = request.data.get('prizes', [])
-            ID = request.data.get('ID')
-
-            if not winners or not prizes or not ID:
-                return Response({"error": "All addresseswinners, prizes, and ID are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-            tx_hash = Awardforarbitrary_comp( winners , prizes , ID)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-class WithdrawWinnersView(APIView):
-    def post(self, request):
-        try:
-            address = request.data.get('address')
-            ID = request.data.get('ID')
-
-            if not address or not ID:
-                return Response({"error": "Address and ID are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-            tx_hash = withdrawOwner(address, ID)
-            return Response({"transaction_hash": tx_hash}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class CompTotalView(APIView):
     def get(self, request):
-        try:
-            ID = request.query_params.get('ID')
-            if not ID:
-                return Response({"error": "ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(services.contract_config())
 
-            total = comptotal(ID)
-            return Response({"total": total}, status=status.HTTP_200_OK)
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class ContestOnChainView(BlockchainAPIView):
+    """On-chain state of a contest (price, balance, participants, deadline, state)."""
 
-class CompStatusView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, contest_id):
+        contest = services.get_contest(contest_id)
+        if contest is None:
+            return Response(
+                {'error': 'ContestNotFound', 'detail': CONTRACT_ERROR_MESSAGES['ContestNotFound']},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(contest)
+
+
+class ParticipantStatusView(BlockchainAPIView):
+    """Has this wallet paid the signup of the contest, and was it for the logged in user?"""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, contest_id, wallet):
+        wallet = checksum(wallet)
+        ref = services.get_participant_ref(contest_id, wallet)
+        return Response(
+            {
+                'contest_id': contest_id,
+                'wallet': wallet,
+                'registered': ref != 0,
+                'is_current_user': ref == request.user.id,
+            }
+        )
+
+
+# ----------------------------------------------------------------------
+# admin endpoints (the backend wallet signs the transactions)
+# ----------------------------------------------------------------------
+
+class OwnerActionView(BlockchainAPIView):
+    """Validates the body with `serializer_class`, sends the transaction and returns it (202 = sent, not mined yet).
+    Poll GET /api/contract/admin/transactions/<tx_hash>/ until status is success / failed."""
+
+    permission_classes = [IsAdminUser]
+    serializer_class = None
+
+    def get_serializer(self, *args, **kwargs):  # used by drf-yasg for the request body
+        return self.serializer_class(*args, **kwargs) if self.serializer_class else None
+
+    def perform(self, data, contest_id, user):
+        raise NotImplementedError
+
+    @swagger_auto_schema(
+        responses={
+            202: ContractTransactionSerializer,
+            400: 'ورودی نامعتبر یا رد شدن توسط قرارداد: {"error": "<ErrorName>", "detail": "..."}',
+            403: 'فقط ادمین',
+            502: 'خطای شبکه بلاکچین',
+            503: 'تنظیمات بلاکچین ناقص است',
+        }
+    )
+    def post(self, request, contest_id=None):
+        data = {}
+        if self.serializer_class is not None:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+        tx = self.perform(data, contest_id, request.user)
+        return Response(ContractTransactionSerializer(tx).data, status=status.HTTP_202_ACCEPTED)
+
+
+class CreateContestView(OwnerActionView):
+    serializer_class = CreateContestSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.create_contest(
+            data['contest_id'], data['price_eth'], data['signup_deadline'], data['budget_eth'], user=user
+        )
+
+
+class SignupDeadlineView(OwnerActionView):
+    serializer_class = DeadlineSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.set_signup_deadline(contest_id, data['signup_deadline'], user=user)
+
+
+class AddBudgetView(OwnerActionView):
+    serializer_class = BudgetSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.add_budget(contest_id, data['amount_eth'], user=user)
+
+
+class CancelContestView(OwnerActionView):
+    def perform(self, data, contest_id, user):
+        return services.cancel_contest(contest_id, user=user)
+
+
+class RefundView(OwnerActionView):
+    serializer_class = RefundSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.refund_participants(contest_id, data['wallets'], user=user)
+
+
+class AwardTop3View(OwnerActionView):
+    serializer_class = Top3Serializer
+
+    def perform(self, data, contest_id, user):
+        return services.award_top3(contest_id, data['first'], data['second'], data['third'], user=user)
+
+
+class AwardPercentageView(OwnerActionView):
+    serializer_class = PercentageAwardSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.award_with_percentage(
+            contest_id, data['first'], data['second'], data['third'], data['percents'], user=user
+        )
+
+
+class AwardFixedView(OwnerActionView):
+    serializer_class = FixedAwardSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.award_fixed(
+            contest_id, data['first'], data['second'], data['third'], data['amounts_eth'], user=user
+        )
+
+
+class AwardDuelView(OwnerActionView):
+    serializer_class = DuelAwardSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.award_duel(contest_id, data['winner'], user=user)
+
+
+class AwardCustomView(OwnerActionView):
+    serializer_class = CustomAwardSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.award_custom(contest_id, data['winners'], data['amounts_eth'], user=user)
+
+
+class WithdrawView(OwnerActionView):
+    serializer_class = WithdrawSerializer
+
+    def perform(self, data, contest_id, user):
+        return services.withdraw_owner_share(contest_id, data['to'], user=user)
+
+
+class PauseView(OwnerActionView):
+    def perform(self, data, contest_id, user):
+        return services.pause(user=user)
+
+
+class UnpauseView(OwnerActionView):
+    def perform(self, data, contest_id, user):
+        return services.unpause(user=user)
+
+
+class OwnerInfoView(BlockchainAPIView):
+    """Server wallet address / balance (it pays the gas) and whether it owns the contract."""
+
+    permission_classes = [IsAdminUser]
+
     def get(self, request):
-        try:
-            ID = request.query_params.get('ID')
-            if not ID:
-                return Response({"error": "ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(services.owner_info())
 
-            status = compstatus(ID)
-            return Response({"status": status}, status=status.HTTP_200_OK)
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-class CompExistView(APIView):
+class TransactionListView(BlockchainAPIView):
+    permission_classes = [IsAdminUser]
+
     def get(self, request):
-        try:
-            ID = request.query_params.get('ID')
-            if not ID:
-                return Response({"error": "ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+        qs = ContractTransaction.objects.select_related('created_by')
+        contest_id = request.query_params.get('contest_id')
+        if contest_id is not None:
+            if not contest_id.isdigit():
+                return Response({'error': 'invalid_input', 'detail': 'contest_id نامعتبر است.'}, status=400)
+            qs = qs.filter(contest_id=int(contest_id))
+        if request.query_params.get('status'):
+            qs = qs.filter(status=request.query_params['status'])
+        return Response(ContractTransactionSerializer(qs[:100], many=True).data)
 
-            exist = compexist(ID)
-            return Response({"exist": exist}, status=status.HTTP_200_OK)
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# frontend view for creating a transaction using Metamask frontend send a post request with user_address and value
-# and it will return the transaction hash with json format
-class CreateTxView(APIView):
-    def post(self, request):
-        value = request.data.get('value')
-        user_address = request.data.get('user_address')
-        if not value or not user_address:
-            return Response({'error': 'Value and user_address required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            tx = create_Tx_metamask(value, user_address)
-            return Response(json.loads(tx))
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+class TransactionDetailView(BlockchainAPIView):
+    """Returns the transaction after refreshing its status from the chain."""
+
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, tx_hash):
+        tx = get_object_or_404(ContractTransaction, tx_hash=tx_hash.lower())
+        return Response(ContractTransactionSerializer(services.refresh_transaction(tx)).data)

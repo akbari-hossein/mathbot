@@ -69,6 +69,15 @@ Frontend: http://localhost:3000
 
 Backend API: http://localhost:8000
 
+## Blockchain (contest prizes)
+
+Contest entry fees and prizes are handled by the `ContestPrize` smart contract
+(`contracts/Contest_prize`), connected to Django through the `contractapi` app and to the
+frontend through `frontend/src/blockchain`.
+
+Everything a backend / frontend developer needs is in
+[docs/blockchain-integration.md](./docs/blockchain-integration.md).
+
 ## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) file for more info

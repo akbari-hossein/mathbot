@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django_jalali",
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_yasg',
 ]
 
 REST_FRAMEWORK = {
@@ -171,3 +172,18 @@ MEDIA_URL = '/uploads/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Blockchain (ContestPrize smart contract) - see docs/blockchain-integration.md
+# The contract can only be used when RPC_URL and CONTRACT_ADDRESS are set.
+# OWNER_PRIVATE_KEY is only needed for admin actions (create / award / refund / withdraw).
+
+BLOCKCHAIN = {
+    'RPC_URL': config('BLOCKCHAIN_RPC_URL', default=''),
+    'CHAIN_ID': config('BLOCKCHAIN_CHAIN_ID', default=11155111, cast=int),  # 11155111 = Sepolia
+    'CONTRACT_ADDRESS': config('CONTEST_CONTRACT_ADDRESS', default=''),
+    'OWNER_PRIVATE_KEY': config('BLOCKCHAIN_OWNER_PRIVATE_KEY', default=''),
+    'EXPLORER_URL': config('BLOCKCHAIN_EXPLORER_URL', default='https://sepolia.etherscan.io'),
+    'RPC_TIMEOUT': config('BLOCKCHAIN_RPC_TIMEOUT', default=20, cast=int),
+    'GAS_MULTIPLIER': config('BLOCKCHAIN_GAS_MULTIPLIER', default=1.2, cast=float),
+}

@@ -2,7 +2,41 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+# pinned so every machine / CI builds the exact same bytecode
+solc_version = "0.8.28"
+# shanghai is supported by Ethereum mainnet, Sepolia and every major L2 / sidechain
+evm_version = "shanghai"
+optimizer = true
+optimizer_runs = 200
 
-remappings = ["@openzeppelin/=lib/openzeppelin-contracts/"]
+remappings = [
+    "@openzeppelin/=lib/openzeppelin-contracts/",
+    "forge-std/=lib/forge-std/src/",
+]
+
+[profile.default.fuzz]
+runs = 256
+
+[profile.default.invariant]
+runs = 64
+depth = 64
+fail_on_revert = false
+
+[profile.ci.fuzz]
+runs = 2000
+
+[profile.ci.invariant]
+runs = 256
+depth = 100
+
+[lint]
+# the public function / struct names are kept as-is because the backend and frontend use them
+exclude_lints = ["mixed-case-function", "mixed-case-variable", "pascal-case-struct", "unwrapped-modifier-logic"]
+
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
